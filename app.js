@@ -693,7 +693,7 @@ async function loadClimo() {
 let climoMonth = new Date().getMonth() + 1; // mois affiché (1-12)
 let climoView = "month"; // "month" (par jour) ou "year" (par semaine)
 let climoYear = "all"; // "all" ou année (nombre)
-let climoYearB = "none"; // année de comparaison superposée ("none" = désactivé)
+let climoYearB = "none"; // comparaison superposée : "none", "norm" (moyennes 1991-2020) ou année
 let climoRenderTok = 0; // jeton anti-course pour les rendus asynchrones
 let showRain = true; // histogramme pluviométrie
 let showRecords = true; // courbes des records
@@ -818,9 +818,14 @@ async function renderClimoMonth(monthNum) {
     daysDraw = base.map((p) => ({ ...p, valMax: p.meanMax, valMin: p.meanMin, rain: p.meanRain }));
   }
 
-  // année de comparaison superposée
+  // comparaison superposée : moyennes 1991-2020 ou une année spécifique
   let cmpYear = null;
-  if (climoYearB !== "none") {
+  const cmpNorm = climoYearB === "norm";
+  if (cmpNorm && yearMode) {
+    // superpose les normales 1991-2020 sous l'année affichée
+    daysDraw = daysDraw.map((p) => ({ ...p, cmpMax: p.meanMax, cmpMin: p.meanMin, cmpRain: p.meanRain }));
+    cmpYear = "normales 1991-2020";
+  } else if (!cmpNorm && climoYearB !== "none") {
     try {
       const byKeyB = await ofYear(+climoYearB);
       daysDraw = daysDraw.map((p) => ({
@@ -878,7 +883,7 @@ async function renderClimoMonth(monthNum) {
       const subjA = isYear
         ? (yearMode ? `En ${yearMode}` : `Sur l'année (normales 1991-2020)`)
         : (yearMode ? `En ${monthLabel} ${yearMode}` : `En ${monthLabel} (normales 1991-2020)`);
-      const refB = `qu'en ${cmpYear}`;
+      const refB = cmpNorm ? "que les normales 1991-2020" : `qu'en ${cmpYear}`;
       const sign = (v) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(1)}°`;
       const detT = `(${sign(dMin)} min / ${sign(dMax)} max)`;
 
@@ -886,7 +891,7 @@ async function renderClimoMonth(monthNum) {
       if (dT >= 4) tPhrase = `il a fait <b>bien plus chaud</b> ${refB} ${detT}`;
       else if (dT >= 1.5) tPhrase = `il a fait <b>plus chaud</b> ${refB} ${detT}`;
       else if (dT > 0.5) tPhrase = `il a fait <b>légèrement plus chaud</b> ${refB} ${detT}`;
-      else if (dT > -0.5) tPhrase = `les températures ont été <b>globalement équivalentes</b> à ${cmpYear} ${detT}`;
+      else if (dT > -0.5) tPhrase = `les températures ont été <b>globalement équivalentes</b> ${cmpNorm ? "aux normales" : `à ${cmpYear}`} ${detT}`;
       else if (dT > -1.5) tPhrase = `il a fait <b>légèrement plus frais</b> ${refB} ${detT}`;
       else if (dT > -4) tPhrase = `il a fait <b>plus frais</b> ${refB} ${detT}`;
       else tPhrase = `il a fait <b>bien plus froid</b> ${refB} ${detT}`;
@@ -953,6 +958,8 @@ function drawClimoChart(canvas, days, monthLabel, yearMode = null, cmpYear = nul
   const maxLbl = yearMode ? `Max ${yearMode}` : "Moy. max";
   const minLbl = yearMode ? `Min ${yearMode}` : "Moy. min";
   const rainLbl = yearMode ? `Pluie ${yearMode}` : "Pluie moy.";
+  // libellé court pour l'infobulle (comparaison année ou normales)
+  const cmpShort = typeof cmpYear === "string" ? "moy. 91-20" : cmpYear;
   attachChartTip(canvas, {
     padL: pad.l, padR: pad.r, count: days.length,
     onHover: (i) => paint(i),
@@ -961,12 +968,12 @@ function drawClimoChart(canvas, days, monthLabel, yearMode = null, cmpYear = nul
       return `<b>${p.tip || `${p.d} ${monthLbl}`}</b>` +
         (showRecords ? `<br><span style="color:#e040fb">Record max</span> <b>${p.recMax.toFixed(1)}°</b> <span class="tip-sub">(${p.recMaxY})</span>` : "") +
         `<br><span style="color:${colValMax}">${maxLbl}</span> <b>${p.valMax != null ? p.valMax.toFixed(1) : "--"}°</b>` +
-        (cmpYear ? `<br><span style="color:${colCmp}">Max ${cmpYear}</span> <b>${p.cmpMax != null ? p.cmpMax.toFixed(1) : "--"}°</b>` : "") +
+        (cmpYear ? `<br><span style="color:${colCmp}">Max ${cmpShort}</span> <b>${p.cmpMax != null ? p.cmpMax.toFixed(1) : "--"}°</b>` : "") +
         `<br><span style="color:${colValMin}">${minLbl}</span> <b>${p.valMin != null ? p.valMin.toFixed(1) : "--"}°</b>` +
-        (cmpYear ? `<br><span style="color:${colCmp}">Min ${cmpYear}</span> <b>${p.cmpMin != null ? p.cmpMin.toFixed(1) : "--"}°</b>` : "") +
+        (cmpYear ? `<br><span style="color:${colCmp}">Min ${cmpShort}</span> <b>${p.cmpMin != null ? p.cmpMin.toFixed(1) : "--"}°</b>` : "") +
         (showRecords ? `<br><span style="color:#4fc3f7">Record min</span> <b>${p.recMin.toFixed(1)}°</b> <span class="tip-sub">(${p.recMinY})</span>` : "") +
         (showRain ? `<br><span style="color:${cmpYear ? "#ffa726" : "#64b5f6"}">${rainLbl}</span> <b>${p.rain != null ? p.rain.toFixed(1) : "--"} mm</b>` : "") +
-        (showRain && cmpYear ? `<br><span style="color:${colCmp}">Pluie ${cmpYear}</span> <b>${p.cmpRain != null ? p.cmpRain.toFixed(1) : "--"} mm</b>` : "");
+        (showRain && cmpYear ? `<br><span style="color:${colCmp}">Pluie ${cmpShort}</span> <b>${p.cmpRain != null ? p.cmpRain.toFixed(1) : "--"} mm</b>` : "");
     },
   });
 
@@ -1364,12 +1371,20 @@ $("climo-next").addEventListener("click", () => {
       s.appendChild(opt);
     }
   }
+  const normOpt = selB.querySelector('option[value="norm"]');
+  normOpt.disabled = true; // activé dès qu'une année spécifique est sélectionnée
   sel.addEventListener("change", () => {
     climoYear = sel.value === "all" ? "all" : +sel.value;
+    // comparer aux normales n'a de sens que si une année spécifique est affichée
+    normOpt.disabled = climoYear === "all";
+    if (climoYear === "all" && climoYearB === "norm") {
+      climoYearB = "none";
+      selB.value = "none";
+    }
     renderClimoMonth(climoMonth);
   });
   selB.addEventListener("change", () => {
-    climoYearB = selB.value === "none" ? "none" : +selB.value;
+    climoYearB = selB.value === "none" || selB.value === "norm" ? selB.value : +selB.value;
     renderClimoMonth(climoMonth);
   });
 })();

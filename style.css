@@ -628,3 +628,8 @@ main {
   .day-desc, .day-sun { display: none; }
   .day-rain { text-align: right; }
 }
+
+
+#nl-badge {
+  display: none !important;
+}

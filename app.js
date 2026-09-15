@@ -24,6 +24,39 @@ function saveCities() {
 
 const $ = (id) => document.getElementById(id);
 
+/* ---------- Fetch Open-Meteo avec limitation de débit + retry sur 429 ----------
+   File d'attente globale : 1 requête à la fois, espacement mini entre requêtes,
+   et backoff exponentiel (ou Retry-After) en cas de 429/502/503. */
+const omFetch = (() => {
+  const MIN_INTERVAL = 350; // ms entre deux requêtes
+  const RETRY_DELAYS = [2000, 5000, 15000]; // backoff après 429/502/503
+  let queue = Promise.resolve();
+  let lastReq = 0;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  return (url) => {
+    const task = queue.then(async () => {
+      for (let attempt = 0; ; attempt++) {
+        const wait = lastReq + MIN_INTERVAL - Date.now();
+        if (wait > 0) await sleep(wait);
+        lastReq = Date.now();
+        let res;
+        try {
+          res = await fetch(url);
+        } catch (e) {
+          if (attempt >= RETRY_DELAYS.length) throw e;
+          await sleep(RETRY_DELAYS[attempt]);
+          continue;
+        }
+        if (![429, 502, 503].includes(res.status) || attempt >= RETRY_DELAYS.length) return res;
+        const retryAfter = Number(res.headers.get("Retry-After"));
+        await sleep(retryAfter > 0 ? retryAfter * 1000 : RETRY_DELAYS[attempt]);
+      }
+    });
+    queue = task.catch(() => {}); // la file continue même si une requête échoue
+    return task;
+  };
+})();
+
 /* ---------- Helpers ---------- */
 const fmt = (v, unit = "", digits = 1) =>
   v === null || v === undefined || Number.isNaN(v) ? "--" : `${Number(v).toFixed(digits).replace(/\.0$/, "")}${unit}`;
@@ -237,7 +270,7 @@ async function loadOpenMeteo() {
     `https://api.open-meteo.com/v1/forecast?latitude=${LAT()}&longitude=${LON()}` +
     `&hourly=soil_moisture_3_to_9cm&past_days=30&forecast_days=7&timezone=Europe%2FParis`;
 
-  const [res, soilRes] = await Promise.all([fetch(url), fetch(soilUrl)]);
+  const [res, soilRes] = await Promise.all([omFetch(url), omFetch(soilUrl)]);
   if (!res.ok) throw new Error(`Open-Meteo HTTP ${res.status}`);
   const data = await res.json();
   const soilData = soilRes.ok ? await soilRes.json() : null;
@@ -552,7 +585,7 @@ async function loadClimo() {
       `https://archive-api.open-meteo.com/v1/archive?latitude=${LAT()}&longitude=${LON()}` +
       `&start_date=1940-01-01&end_date=${yesterday}` +
       `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FParis`;
-    const res = await fetch(url);
+    const res = await omFetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`); // géré par le catch de l'appelant
     const d = (await res.json()).daily;
 
@@ -667,20 +700,38 @@ let showRecords = true; // courbes des records
 let showRecYears = true; // années des records sur le graphe
 const yearDailyCache = {}; // données journalières d'une année : clé "lat,lon-année"
 
-/* données journalières (tmax/tmin/pluie) d'une année pour la ville active */
+/* données journalières (tmax/tmin/pluie) d'une année pour la ville active
+   — cache mémoire + localStorage pour les années terminées (immuables) */
 async function loadYearDaily(year) {
   const key = `${LAT()},${LON()}-${year}`;
   if (yearDailyCache[key]) return yearDailyCache[key];
+  const lsKey = `omyear-${key}`;
+  const finished = year < new Date().getFullYear();
+  if (finished) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(lsKey));
+      if (cached) { yearDailyCache[key] = cached; return cached; }
+    } catch {}
+  }
   const yesterday = new Date(Date.now() - 86400000).toLocaleDateString("sv-SE");
   const end = `${year}-12-31` < yesterday ? `${year}-12-31` : yesterday;
   const url =
     `https://archive-api.open-meteo.com/v1/archive?latitude=${LAT()}&longitude=${LON()}` +
     `&start_date=${year}-01-01&end_date=${end}` +
     `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FParis`;
-  const res = await fetch(url);
+  const res = await omFetch(url);
   if (!res.ok) throw new Error(`Archive HTTP ${res.status}`);
   const daily = (await res.json()).daily;
   yearDailyCache[key] = daily;
+  if (finished) {
+    try {
+      localStorage.setItem(lsKey, JSON.stringify(daily));
+    } catch {
+      // quota plein : on purge les années cachées et on réessaie une fois
+      Object.keys(localStorage).filter((k) => k.startsWith("omyear-")).forEach((k) => localStorage.removeItem(k));
+      try { localStorage.setItem(lsKey, JSON.stringify(daily)); } catch {}
+    }
+  }
   return daily;
 }
 
@@ -1133,7 +1184,7 @@ function switchCity(i) {
 
 /* géocodage Open-Meteo */
 async function searchCities(name, count = 6) {
-  const res = await fetch(
+  const res = await omFetch(
     `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=${count}&language=fr&format=json`
   );
   if (!res.ok) throw new Error(`Géocodage HTTP ${res.status}`);

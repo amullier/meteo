@@ -581,6 +581,28 @@ main {
   .climo-row { grid-template-columns: 74px 40px 1fr auto; gap: .4rem; }
   .climo-norm { font-size: .72rem; }
 
+  /* Climato mensuelle/annuelle : nav + entête du graphe */
+  .climo-nav {
+    flex-wrap: wrap;
+    gap: .5rem .6rem;
+    margin: 0 0 .7rem;
+  }
+  .climo-nav-month { min-width: 90px; font-size: .95rem; }
+  .climo-nav-btn { padding: .35rem .8rem; }
+  .climo-year-select {
+    font-size: .8rem;
+    padding: .3rem .4rem;
+    max-width: 46vw;
+  }
+  .climo-toggle {
+    font-size: .75rem;
+    padding: .28rem .65rem;
+    margin-bottom: .35rem;
+  }
+  #climo-chart-title { font-size: .95rem; }
+  .climo-compare-summary { font-size: .78rem; margin: -.1rem 0 .5rem; }
+  .climo-chart-legend { gap: .35rem .7rem; font-size: .72rem; }
+
   /* Résumé du jour */
   .today-summary { gap: .5rem 1rem; padding: .65rem .8rem; font-size: .85rem; }
   .today-summary .big-icon { font-size: 1.8rem; }

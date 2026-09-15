@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Météo — Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="city-bar hidden" id="city-bar">
+    <div id="city-tabs" class="city-tabs"></div>
+    <form id="city-form" class="city-form" autocomplete="off">
+      <input id="city-input" class="city-input" type="text" placeholder="Ajouter une ville…" aria-label="Ajouter une ville">
+      <button type="submit" class="city-add-btn" title="Ajouter">+</button>
+    </form>
+  </header>
+
+  <!-- Page d'accueil quand aucune ville n'est enregistrée -->
+  <div id="city-welcome" class="city-welcome hidden">
+    <h1>Météo — Dashboard</h1>
+    <p>Choisissez une ville pour commencer</p>
+    <form id="welcome-form" class="city-form" autocomplete="off">
+      <input id="welcome-input" class="city-input" type="text" placeholder="Nom de la ville…" aria-label="Nom de la ville" autofocus>
+      <button type="submit" class="city-add-btn" title="Valider">→</button>
+    </form>
+    <div id="welcome-error" class="welcome-error"></div>
+  </div>
+
+  <main id="dashboard" class="hidden">
+    <!-- ============ AUJOURD'HUI ============ -->
+    <section class="panel" id="panel-today">
+      <h2>Aujourd'hui <span id="refresh-dot" class="refresh-dot" title="En attente de la première actualisation…"></span></h2>
+
+      <div class="today-top" id="today-top">
+        <!-- Conditions actuelles -->
+        <div class="today-obs" id="today-obs">
+          <h3>Temps réel</h3>
+          <div id="obs-loading" class="loading">Chargement des observations…</div>
+          <div id="obs-content" class="hidden">
+            <div class="obs-hero">
+              <div class="hero-temp">
+                <span id="obs-temp">--</span><span class="unit">°C</span>
+              </div>
+              <div class="hero-details">
+                <div class="hero-row"><span class="label">Ressenti</span><span id="obs-feels">--</span></div>
+                <div class="hero-row"><span class="label">Humidité</span><span id="obs-hum">--</span></div>
+                <div class="hero-row"><span class="label">Point de rosée</span><span id="obs-dew">--</span></div>
+              </div>
+            </div>
+            <div class="obs-compact">
+              <span class="obs-line" id="obs-wind-line"></span>
+              <span class="obs-line" id="obs-rain-line"></span>
+              <span class="obs-line" id="obs-pressure-line"></span>
+            </div>
+            <div id="climo" class="climo hidden"></div>
+          </div>
+        </div>
+
+        <!-- Prévision de la journée -->
+        <div class="today-forecast">
+          <h3>Prévision du jour</h3>
+          <div id="today-loading" class="loading">Chargement…</div>
+          <div id="today-content" class="hidden">
+            <div class="today-summary" id="today-summary"></div>
+            <div id="today-strip" class="hourly-strip"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sol & évapotranspiration -->
+      <div class="today-agri">
+        <h3>Sol &amp; évapotranspiration</h3>
+        <div id="agri-loading" class="loading">Chargement…</div>
+        <div id="agri-content" class="hidden">
+          <div class="soil-diagram" id="soil-diagram"></div>
+          <div class="chart-block">
+            <h3>Humidité du sol (3-9 cm) — 30 derniers jours + 7 jours de prévision</h3>
+            <canvas id="chart-soil" height="80"></canvas>
+            <div class="soil-legend">
+              <span><i style="background:#e57373"></i>&lt; 10 % sécheresse</span>
+              <span><i style="background:#ffb74d"></i>10-15 % sec</span>
+              <span><i style="background:#81c784"></i>15-25 % correct</span>
+              <span><i style="background:#4fc3f7"></i>25-35 % humide</span>
+              <span><i style="background:#9575cd"></i>&gt; 35 % saturé</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PRÉVISIONS ============ -->
+    <section class="panel" id="panel-forecast">
+      <h2>Prévisions</h2>
+
+      <h3>7 jours <span class="src">détail horaire en dépliant les 2 premiers jours</span></h3>
+      <div id="daily-loading" class="loading">Chargement…</div>
+      <div id="daily-grid" class="daily-grid hidden"></div>
+    </section>
+
+    <!-- ============ CLIMATOLOGIE DU MOIS ============ -->
+    <section class="panel" id="panel-climo-month">
+      <h2 id="climo-month-title">Climatologie <span class="src">ERA5 1940 → hier</span></h2>
+      <div class="climo-nav">
+        <div class="climo-view-tabs">
+          <button id="climo-view-month" class="climo-view-tab on" type="button">Mois</button>
+          <button id="climo-view-year" class="climo-view-tab" type="button">Année</button>
+        </div>
+        <button id="climo-prev" class="climo-nav-btn" title="Mois précédent" aria-label="Mois précédent">◀</button>
+        <span id="climo-month-name" class="climo-nav-month"></span>
+        <button id="climo-next" class="climo-nav-btn" title="Mois suivant" aria-label="Mois suivant">▶</button>
+        <select id="climo-year" class="climo-year-select" title="Année affichée sur le graphique">
+          <option value="all">Toutes les années</option>
+        </select>
+        <select id="climo-year-b" class="climo-year-select" title="Superposer une autre année pour comparaison">
+          <option value="none">Comparer à…</option>
+        </select>
+      </div>
+      <button id="toggle-records" class="climo-toggle on" type="button" title="Afficher/masquer les records">Records</button>
+      <button id="toggle-recyears" class="climo-toggle on" type="button" title="Afficher/masquer les années des records">Années records</button>
+      <button id="toggle-rain" class="climo-toggle on" type="button" title="Afficher/masquer la pluviométrie">Pluviométrie</button>
+      <div id="climo-month-loading" class="loading">Chargement de l'archive climatique…</div>
+      <div id="climo-month-content" class="hidden">
+        <div class="chart-block">
+          <h3 id="climo-chart-title">Records et moyennes par jour du mois</h3>
+          <p id="climo-compare-summary" class="climo-compare-summary hidden"></p>
+          <canvas id="chart-climo" height="280"></canvas>
+          <div id="climo-chart-legend" class="soil-legend climo-chart-legend"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

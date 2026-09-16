@@ -747,6 +747,20 @@ function startClimo() {
   });
 }
 
+/* station Infoclimat la plus proche (liste locale IC_STATIONS : [id, nom, lat, lon, genre]) */
+function nearestIcStation(lat, lon) {
+  if (typeof IC_STATIONS === "undefined") return null;
+  const R = 6371, rad = Math.PI / 180;
+  let best = null, bestD = Infinity;
+  for (const [id, name, sLat, sLon] of IC_STATIONS) {
+    const dLat = (sLat - lat) * rad, dLon = (sLon - lon) * rad;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat * rad) * Math.cos(sLat * rad) * Math.sin(dLon / 2) ** 2;
+    const d = 2 * R * Math.asin(Math.sqrt(a));
+    if (d < bestD) { bestD = d; best = { id, name }; }
+  }
+  return best ? { ...best, dist: bestD } : null;
+}
+
 async function renderClimoMonth(monthNum) {
   if (!climoStats || !climoStats.months || !climoStats.months[monthNum]) return;
   const m = climoStats.months[monthNum];
@@ -938,7 +952,9 @@ function drawClimoChart(canvas, days, monthLabel, yearMode = null, cmpYear = nul
   const max = Math.ceil((Math.max(...all) + 3) / 5) * 5;
   // hauteur proportionnelle à l'amplitude : espacement constant entre les degrés d'un mois à l'autre
   const PX_PER_DEG = 5.5;
-  const h = Math.round((max - min) * PX_PER_DEG + pad.t + pad.b);
+  let h = Math.round((max - min) * PX_PER_DEG + pad.t + pad.b);
+  // en plein écran : occupe la hauteur disponible (nav + titres + légende ≈ 200 px)
+  if (document.fullscreenElement) h = Math.max(h, window.innerHeight - 200);
 
   const x = (i) => pad.l + (i / (days.length - 1)) * (w - pad.l - pad.r);
   const y = (v) => pad.t + (1 - (v - min) / (max - min)) * (h - pad.t - pad.b);
@@ -1304,6 +1320,14 @@ attachCityAutocomplete("welcome-input", (msg) => { $("welcome-error").textConten
    ============================================================ */
 function refreshAll() {
   const dot = $("refresh-dot");
+  // lien (titre) + vignette temps réel (bloc observations) de la station Infoclimat la plus proche
+  const st = nearestIcStation(LAT(), LON());
+  $("ic-station").innerHTML = st
+    ? `<a class="ic-link" href="https://www.infoclimat.fr/stations-meteo/?s=${encodeURIComponent(st.id)}" target="_blank" rel="noopener" title="Station Infoclimat la plus proche">Infoclimat : ${st.name} (${st.dist.toFixed(0)} km)</a>`
+    : "";
+  $("ic-vignette-slot").innerHTML = st
+    ? `<iframe class="ic-vignette" src="https://www.infoclimat.fr/infoclimat/vignette_fiche_temps.php?s=${encodeURIComponent(st.id)}" title="Vignette Infoclimat ${st.name}" loading="lazy" scrolling="no" width="112" height="85"></iframe>`
+    : "";
   const started = Date.now();
   dot.classList.add("refreshing");
   dot.title = "Actualisation en cours…";
@@ -1404,6 +1428,20 @@ $("toggle-recyears").addEventListener("click", () => {
 $("toggle-rain").addEventListener("click", () => {
   showRain = !showRain;
   $("toggle-rain").classList.toggle("on", showRain);
+  renderClimoMonth(climoMonth);
+});
+
+/* plein écran du panneau climato (redessine le graphe au changement de taille) */
+$("climo-fullscreen").addEventListener("click", () => {
+  const panel = $("panel-climo-month");
+  if (document.fullscreenElement) document.exitFullscreen();
+  else panel.requestFullscreen().catch(() => {});
+});
+document.addEventListener("fullscreenchange", () => {
+  const on = document.fullscreenElement === $("panel-climo-month");
+  const btn = $("climo-fullscreen");
+  btn.textContent = on ? "✕" : "⛶";
+  btn.title = on ? "Quitter le plein écran" : "Plein écran";
   renderClimoMonth(climoMonth);
 });
 

@@ -14,6 +14,11 @@
   font-size: 16px;
 }
 
+#nl-badge, #nl-badge-frame {
+  display: none !important;
+  opacity: 0;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -162,6 +167,11 @@ main {
   gap: .6rem;
 }
 .src { color: var(--muted); font-size: .72rem; font-weight: 400; text-transform: uppercase; letter-spacing: .5px; }
+.ic-link { color: var(--accent-2); text-decoration: none; }
+.ic-link:hover { text-decoration: underline; }
+#ic-station { display: inline-flex; align-items: center; gap: .6rem; }
+#ic-vignette-slot { margin-left: auto; flex-shrink: 0; display: flex; }
+.ic-vignette { border: 0; border-radius: 6px; }
 
 /* ---------- Indicateur d'actualisation ---------- */
 .refresh-dot {
@@ -383,6 +393,20 @@ main {
   cursor: pointer;
 }
 .climo-year-select:focus { outline: none; border-color: var(--accent); }
+/* panneau climato en plein écran : graphe agrandi et contenu centré */
+#panel-climo-month:fullscreen {
+  background: var(--bg, #0d1420);
+  overflow-y: auto;
+  padding: 1.2rem 2rem;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#panel-climo-month:fullscreen #climo-month-content,
+#panel-climo-month:fullscreen .chart-block {
+  width: 100%;
+}
 .climo-toggle {
   background: var(--panel-2);
   border: 1px solid var(--border);
@@ -396,6 +420,8 @@ main {
 }
 .climo-toggle.on { color: var(--accent-2); border-color: var(--accent); }
 .climo-toggle:hover { color: var(--text); }
+.climo-toggles { display: flex; flex-wrap: wrap; gap: .4rem; }
+#panel-climo-month:fullscreen .climo-toggles { justify-content: center; }
 .climo-compare-summary {
   color: var(--muted);
   font-size: .85rem;
@@ -630,6 +656,3 @@ main {
 }
 
 
-#nl-badge {
-  display: none !important;
-}

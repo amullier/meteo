@@ -30,7 +30,7 @@
   <main id="dashboard" class="hidden">
     <!-- ============ AUJOURD'HUI ============ -->
     <section class="panel" id="panel-today">
-      <h2>Aujourd'hui <span id="refresh-dot" class="refresh-dot" title="En attente de la première actualisation…"></span></h2>
+      <h2>Aujourd'hui <span id="refresh-dot" class="refresh-dot" title="En attente de la première actualisation…"></span> <span id="ic-station" class="src"></span></h2>
 
       <div class="today-top" id="today-top">
         <!-- Conditions actuelles -->
@@ -47,6 +47,7 @@
                 <div class="hero-row"><span class="label">Humidité</span><span id="obs-hum">--</span></div>
                 <div class="hero-row"><span class="label">Point de rosée</span><span id="obs-dew">--</span></div>
               </div>
+              <span id="ic-vignette-slot"></span>
             </div>
             <div class="obs-compact">
               <span class="obs-line" id="obs-wind-line"></span>
@@ -116,10 +117,13 @@
           <option value="none">Comparer à…</option>
           <option value="norm">Moyennes 1991-2020</option>
         </select>
+        <button id="climo-fullscreen" class="climo-nav-btn" type="button" title="Plein écran">⛶</button>
       </div>
-      <button id="toggle-records" class="climo-toggle on" type="button" title="Afficher/masquer les records">Records</button>
-      <button id="toggle-recyears" class="climo-toggle on" type="button" title="Afficher/masquer les années des records">Années records</button>
-      <button id="toggle-rain" class="climo-toggle on" type="button" title="Afficher/masquer la pluviométrie">Pluviométrie</button>
+      <div class="climo-toggles">
+        <button id="toggle-records" class="climo-toggle on" type="button" title="Afficher/masquer les records">Records</button>
+        <button id="toggle-recyears" class="climo-toggle on" type="button" title="Afficher/masquer les années des records">Années records</button>
+        <button id="toggle-rain" class="climo-toggle on" type="button" title="Afficher/masquer la pluviométrie">Pluviométrie</button>
+      </div>
       <div id="climo-month-loading" class="loading">Chargement de l'archive climatique…</div>
       <div id="climo-month-content" class="hidden">
         <div class="chart-block">
@@ -132,6 +136,7 @@
     </section>
   </main>
 
+  <script src="infoclimat-stations.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -101,27 +101,56 @@
 
     <!-- ============ CLIMATOLOGIE DU MOIS ============ -->
     <section class="panel" id="panel-climo-month">
+      <div class="climo-mode-switch" role="group" aria-label="Mode de climatologie">
+        <button id="climo-mode-single" class="climo-toggle on" type="button" aria-pressed="true" aria-controls="climo-single">Une ville</button>
+        <button id="climo-mode-compare" class="climo-toggle" type="button" aria-pressed="false" aria-controls="city-comparison">Comparer deux villes</button>
+      </div>
+      <div id="climo-single">
       <h2 id="climo-month-title">Climatologie <span class="src">ERA5 1940 → hier</span></h2>
       <div class="climo-nav">
         <div class="climo-view-tabs">
-          <button id="climo-view-month" class="climo-view-tab on" type="button">Mois</button>
-          <button id="climo-view-year" class="climo-view-tab" type="button">Année</button>
+          <button id="climo-view-month" class="climo-view-tab" type="button">Mois</button>
+          <button id="climo-view-year" class="climo-view-tab on" type="button">Année</button>
         </div>
-        <button id="climo-prev" class="climo-nav-btn" title="Mois précédent" aria-label="Mois précédent">◀</button>
-        <span id="climo-month-name" class="climo-nav-month"></span>
-        <button id="climo-next" class="climo-nav-btn" title="Mois suivant" aria-label="Mois suivant">▶</button>
-        <select id="climo-year" class="climo-year-select" title="Année affichée sur le graphique">
+        <button id="climo-prev" class="climo-nav-btn hidden" title="Mois précédent" aria-label="Mois précédent">◀</button>
+        <span id="climo-month-name" class="climo-nav-month hidden"></span>
+        <button id="climo-next" class="climo-nav-btn hidden" title="Mois suivant" aria-label="Mois suivant">▶</button>
+        <select id="climo-year" class="climo-year-select" title="Année affichée sur le graphique" autocomplete="off">
           <option value="all">Toutes les années</option>
         </select>
-        <select id="climo-year-b" class="climo-year-select" title="Superposer une autre année pour comparaison">
+        <select id="climo-year-b" class="climo-year-select" title="Superposer une autre année pour comparaison" autocomplete="off">
           <option value="none">Comparer à…</option>
           <option value="norm">Moyennes 1991-2020</option>
         </select>
+        <span class="climo-settings-wrap">
+          <button id="climo-settings" class="climo-nav-btn" type="button" title="Paramètres d'affichage du graphique" aria-haspopup="true" aria-expanded="false" aria-controls="climo-settings-menu">⚙</button>
+          <div id="climo-settings-menu" class="climo-settings-menu hidden" role="dialog" aria-label="Paramètres d'affichage du graphique">
+            <div class="climo-settings-label">Hauteur de l'axe vertical</div>
+            <div class="climo-settings-options" role="radiogroup" aria-label="Hauteur de l'axe vertical">
+              <button type="button" class="climo-toggle" role="radio" data-scale="1">×1</button>
+              <button type="button" class="climo-toggle" role="radio" data-scale="1.5">×1,5</button>
+              <button type="button" class="climo-toggle" role="radio" data-scale="2">×2</button>
+            </div>
+            <div class="climo-settings-label">Largeur (défilement horizontal)</div>
+            <div class="climo-settings-options" role="radiogroup" aria-label="Largeur du graphique">
+              <button type="button" class="climo-toggle" role="radio" data-width="1">×1</button>
+              <button type="button" class="climo-toggle" role="radio" data-width="2">×2</button>
+              <button type="button" class="climo-toggle" role="radio" data-width="3">×3</button>
+              <button type="button" class="climo-toggle" role="radio" data-width="4">×4</button>
+            </div>
+            <div class="climo-settings-label">Courbes</div>
+            <div class="climo-settings-options" role="radiogroup" aria-label="Forme des courbes">
+              <button type="button" class="climo-toggle" role="radio" data-smooth="none" title="Segments droits entre chaque jour">Brutes</button>
+              <button type="button" class="climo-toggle" role="radio" data-smooth="round" title="Pics arrondis, la courbe passe toujours par les valeurs réelles">Arrondies</button>
+            </div>
+          </div>
+        </span>
         <button id="climo-fullscreen" class="climo-nav-btn" type="button" title="Plein écran">⛶</button>
       </div>
       <div class="climo-toggles">
+        <button id="toggle-temps" class="climo-toggle on" type="button" title="Afficher/masquer les courbes de température">Températures</button>
         <button id="toggle-records" class="climo-toggle on" type="button" title="Afficher/masquer les records">Records</button>
-        <button id="toggle-recyears" class="climo-toggle on" type="button" title="Afficher/masquer les années des records">Années records</button>
+        <button id="toggle-recyears" class="climo-toggle" type="button" title="Afficher/masquer les années des records">Années records</button>
         <button id="toggle-rain" class="climo-toggle on" type="button" title="Afficher/masquer la pluviométrie">Pluviométrie</button>
       </div>
       <div id="climo-month-loading" class="loading">Chargement de l'archive climatique…</div>
@@ -129,8 +158,80 @@
         <div class="chart-block">
           <h3 id="climo-chart-title">Records et moyennes par jour du mois</h3>
           <p id="climo-compare-summary" class="climo-compare-summary hidden"></p>
-          <canvas id="chart-climo" height="280"></canvas>
+          <div id="climo-rank" class="climo-rank hidden"></div>
+          <div id="climo-compare-chips" class="climo-cmp-chips hidden" title="Minimale la plus basse et maximale la plus haute, cumul de pluie, sur les jours comparés"></div>
+          <p id="climo-chart-loading" class="climo-chart-loading hidden" role="status"></p>
+          <div id="climo-chart-scroll" class="climo-chart-scroll">
+            <div class="climo-chart-track">
+              <canvas id="climo-axis-l" class="climo-axis climo-axis-l" aria-hidden="true"></canvas>
+              <canvas id="chart-climo" height="280"></canvas>
+              <canvas id="climo-axis-r" class="climo-axis climo-axis-r" aria-hidden="true"></canvas>
+            </div>
+          </div>
           <div id="climo-chart-legend" class="soil-legend climo-chart-legend"></div>
+          <div id="climo-variability" class="climo-variability hidden"></div>
+        </div>
+        <div id="climo-change" class="chart-block hidden">
+          <h3>Climat qui change</h3>
+          <div id="climo-change-grid" class="stat-grid climo-change-grid"></div>
+          <div id="climo-change-records"></div>
+        </div>
+      </div>
+      </div>
+      <div id="city-comparison" class="hidden">
+        <h2>Deux villes, deux climats <span id="comparison-period-label" class="src">Normales 1991–2020</span></h2>
+        <p id="comparison-intro" class="comparison-intro">Comparez le climat habituel sur une même période de 30 ans.</p>
+        <div class="comparison-cities">
+          <div class="comparison-city comparison-city-a"><span class="comparison-label">Ville active · aire orange</span><strong id="comparison-city-a"></strong></div>
+          <span class="comparison-versus" aria-hidden="true">↔</span>
+          <div class="comparison-city comparison-city-b">
+            <label class="comparison-label" for="comparison-city-b">Comparer à · aire violette</label>
+            <div class="comparison-search-field">
+              <input id="comparison-city-b" class="city-input" type="text" role="combobox" autocomplete="off" placeholder="Choisir ou rechercher une ville…" aria-autocomplete="list" aria-expanded="false" aria-controls="comparison-search-results" aria-describedby="comparison-search-status">
+              <div id="comparison-search-results" class="comparison-search-results hidden" role="listbox" aria-label="Villes proposées"></div>
+            </div>
+          </div>
+        </div>
+        <p id="comparison-search-status" class="comparison-note" role="status"></p>
+        <div class="comparison-period-nav">
+          <label for="comparison-year" class="comparison-label">Période comparée</label>
+          <select id="comparison-year" class="climo-year-select">
+            <option value="norm">Moyennes 1991–2020</option>
+          </select>
+        </div>
+        <div id="comparison-status" class="comparison-status" role="status"></div>
+        <button id="comparison-retry" class="climo-toggle hidden" type="button">Réessayer</button>
+        <div id="comparison-content" class="hidden">
+          <div class="comparison-month-nav">
+            <button id="comparison-prev" class="climo-nav-btn" type="button" aria-label="Mois précédent">◀</button>
+            <label for="comparison-month" class="comparison-label">Mois comparé</label>
+            <select id="comparison-month" class="climo-year-select"></select>
+            <button id="comparison-next" class="climo-nav-btn" type="button" aria-label="Mois suivant">▶</button>
+          </div>
+          <div id="comparison-cards" class="comparison-cards" aria-live="polite"></div>
+          <div class="comparison-chart-head">
+            <h3>Au fil des saisons</h3>
+            <div id="comparison-metrics" class="climo-toggles" role="group" aria-label="Indicateur du graphique">
+              <button type="button" class="climo-toggle on" data-metric="temperature" aria-pressed="true">Températures</button>
+              <button type="button" class="climo-toggle" data-metric="sun" aria-pressed="false">Ensoleillement</button>
+            </div>
+          </div>
+          <div id="comparison-options" class="climo-toggles comparison-options" role="group" aria-label="Éléments du graphique">
+            <button type="button" class="climo-toggle on" data-option="records" aria-pressed="true">Records</button>
+            <button type="button" class="climo-toggle on" data-option="years" aria-pressed="true">Années records</button>
+            <button type="button" class="climo-toggle on" data-option="rain" aria-pressed="true">Pluviométrie</button>
+          </div>
+          <p id="comparison-record-status" class="comparison-note" role="status"></p>
+          <button id="comparison-record-retry" class="climo-toggle hidden" type="button">Réessayer les records</button>
+          <div id="comparison-legend" class="comparison-legend"></div>
+          <p id="comparison-chart-unit" class="comparison-note"></p>
+          <div id="comparison-chart" class="comparison-chart"></div>
+          <p class="comparison-note">Cliquez sur un mois du graphique pour afficher son résumé. Le sélecteur de mois est aussi accessible au clavier.</p>
+          <details class="comparison-table-wrap">
+            <summary>Voir les valeurs des 12 mois</summary>
+            <div class="comparison-table-scroll"><table id="comparison-table"></table></div>
+          </details>
+          <p id="comparison-source" class="comparison-note comparison-source"></p>
         </div>
       </div>
     </section>
@@ -138,5 +239,6 @@
 
   <script src="infoclimat-stations.js"></script>
   <script src="app.js"></script>
+  <script src="climate-comparison.js"></script>
 </body>
 </html>

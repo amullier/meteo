@@ -359,6 +359,31 @@ main {
   transition: background .15s;
 }
 .climo-nav-btn:hover { background: var(--border); }
+.climo-settings-wrap { position: relative; }
+.climo-settings-menu {
+  position: absolute;
+  top: calc(100% + .4rem);
+  right: 0;
+  z-index: 20;
+  min-width: 220px;
+  padding: .7rem .8rem;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+}
+.climo-settings-label { color: var(--muted); font-size: .75rem; margin-bottom: .45rem; }
+.climo-settings-options + .climo-settings-label { margin-top: .75rem; }
+.climo-settings-options { display: flex; gap: .4rem; }
+.climo-settings-options .climo-toggle { flex: 1; }
+/* graphe climato élargi : défilement horizontal, axes Y figés sur les bords */
+.climo-chart-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+.climo-chart-track { display: flex; align-items: flex-start; width: max-content; }
+.chart-block .climo-chart-track canvas { flex: none; }
+.climo-axis { display: none; position: sticky; z-index: 1; pointer-events: none; background: var(--panel); }
+.climo-chart-scroll.wide .climo-axis { display: block; }
+.climo-axis-l { left: 0; }
+.climo-axis-r { right: 0; }
 .climo-view-tabs {
   display: flex;
   border: 1px solid var(--border);
@@ -428,6 +453,115 @@ main {
   margin: -.2rem 0 .6rem;
 }
 .climo-compare-summary b { color: var(--text); }
+.climo-cmp-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 .6rem; }
+.climo-cmp-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .25rem .7rem;
+  padding: .35rem .75rem;
+  border: 1px solid var(--c);
+  border-left-width: 4px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c) 10%, transparent);
+  color: var(--muted);
+  font-size: .82rem;
+}
+.climo-cmp-chip b { color: var(--text); font-size: .95rem; }
+.climo-cmp-name { color: var(--c); font-weight: 700; font-size: .95rem; }
+.climo-cmp-date { font-size: .75rem; }
+.climo-rank { display: flex; flex-direction: column; gap: .3rem; margin: 0 0 .6rem; }
+.climo-rank-line {
+  padding: .3rem .7rem;
+  border-left: 4px solid var(--c);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c) 8%, transparent);
+  color: var(--muted);
+  font-size: .85rem;
+}
+.climo-rank-line b { color: var(--text); }
+.climo-rank-name { color: var(--c); font-weight: 700; margin-right: .2rem; }
+.climo-rank-sub { font-size: .75rem; }
+.climo-top-row .climo-top-year { color: var(--muted); font-weight: 500; }
+.climo-top-row.recent .climo-top-year { color: var(--text); font-weight: 700; }
+.climo-top-row.sel { background: color-mix(in srgb, var(--c) 18%, transparent); border-radius: 4px; }
+.climo-top-row.sel .climo-top-year { color: var(--c); }
+.climo-top-anom { font-style: normal; font-weight: 400; color: var(--muted); font-size: .75rem; margin-left: .3rem; }
+.climo-change-note { color: var(--muted); font-size: .75rem; margin-top: .5rem; }
+.climo-change-note b { color: var(--text); }
+.rec-hot { color: #e57373; }
+.rec-cold { color: #4fc3f7; }
+.climo-rec-legend { display: flex; gap: .8rem; font-size: .72rem; font-weight: 400; }
+.stat-grid.climo-change-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.climo-rec-card { margin-top: .8rem; }
+.stat-title.climo-rec-title { flex-direction: row; justify-content: space-between; align-items: baseline; flex-wrap: wrap; }
+.climo-rec-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: .4rem 1.6rem;
+  align-items: start;
+}
+.climo-rec-row {
+  display: grid;
+  grid-template-columns: 4.2rem 1fr auto;
+  align-items: center;
+  gap: .5rem;
+  font-size: .78rem;
+  padding: .15rem 0;
+  font-variant-numeric: tabular-nums;
+}
+.climo-rec-dec { color: var(--muted); }
+.climo-rec-bar { display: flex; height: .7rem; border-radius: 3px; overflow: hidden; background: rgba(255, 255, 255, .05); }
+.climo-rec-bar .hot { background: #e57373; }
+.climo-rec-bar .cold { background: #4fc3f7; }
+.climo-rec-num { min-width: 4.5rem; text-align: right; }
+.climo-rec-head {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 1.6rem;
+  margin-bottom: .2rem;
+  color: var(--muted);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.climo-rec-head .climo-year-select { text-transform: none; letter-spacing: 0; font-size: .78rem; padding: .15rem .35rem; }
+.climo-chart-loading {
+  color: var(--accent-2);
+  font-size: .82rem;
+  margin: -.2rem 0 .6rem;
+}
+.climo-chart-loading::before {
+  content: "";
+  display: inline-block;
+  width: .8em;
+  height: .8em;
+  margin-right: .45em;
+  vertical-align: -.1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: climo-spin .8s linear infinite;
+}
+@keyframes climo-spin { to { transform: rotate(360deg); } }
+#chart-climo { transition: opacity .2s; }
+#chart-climo.is-loading { opacity: .35; }
+.climo-variability {
+  margin-top: .8rem;
+  padding-top: .7rem;
+  border-top: 1px solid var(--border);
+  font-size: .82rem;
+}
+.climo-var-head { font-weight: 600; margin-bottom: .4rem; }
+.climo-var-scroll { overflow-x: auto; }
+.climo-var-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.climo-var-table th, .climo-var-table td { padding: .4rem .5rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.climo-var-table thead th { color: var(--muted); font-weight: 500; }
+.climo-var-table tbody th { color: var(--muted); font-weight: 400; cursor: help; }
+.climo-var-help { font-size: .75rem; opacity: .7; }
+.climo-var-badge { margin-left: .3rem; white-space: nowrap; }
+.climo-var-note { color: var(--muted); font-size: .75rem; margin-top: .4rem; }
 .climo-nav-month {
   font-size: 1rem;
   font-weight: 600;
@@ -460,6 +594,7 @@ main {
 .stat-card.hot .stat-title { color: #e57373; }
 .stat-card.cold .stat-title { color: #4fc3f7; }
 .stat-card.rain .stat-title { color: var(--rain); }
+.stat-card.dry .stat-title { color: #d4a373; }
 .stat-row {
   display: flex;
   justify-content: space-between;
@@ -584,8 +719,72 @@ main {
   padding: .6rem .4rem .3rem;
 }
 
+/* ---------- Comparaison de deux villes ---------- */
+.climo-mode-switch { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.2rem; }
+#city-comparison h2 { flex-wrap: wrap; margin-bottom: .4rem; }
+.comparison-intro, .comparison-note { color: var(--muted); font-size: .8rem; line-height: 1.6; }
+.comparison-intro { margin-bottom: 1.2rem; }
+.comparison-cities { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 1rem; }
+.comparison-city { display: flex; flex-direction: column; gap: .5rem; min-width: 0; padding: .9rem 1rem; background: var(--panel-2); border-radius: 10px; border-top: 3px solid; }
+.comparison-city-a { border-color: #ffa726; }
+.comparison-city-b { border-color: #b388ff; }
+.comparison-city strong { font-size: 1.1rem; overflow-wrap: anywhere; min-height: 2rem; }
+.comparison-label { color: var(--muted); font-size: .75rem; }
+.comparison-versus { color: var(--muted); font-size: 1.4rem; }
+.comparison-search-field { position: relative; min-width: 0; }
+.comparison-search-field .city-input { width: 100%; min-width: 0; border-radius: 8px; }
+.comparison-search-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50; max-height: 260px; overflow-y: auto; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, .45); }
+.comparison-search-results [role="option"] { padding: .65rem .8rem; color: var(--text); font-size: .8rem; cursor: pointer; overflow-wrap: anywhere; }
+.comparison-search-results [role="option"]:hover,
+.comparison-search-results [aria-selected="true"] { background: var(--border); }
+.comparison-status:not(:empty) { margin: 1rem 0; padding: 1rem; background: var(--panel-2); border-radius: 10px; color: var(--muted); font-size: .88rem; line-height: 1.6; }
+.comparison-month-nav { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .6rem; margin: 1.5rem 0 1rem; }
+.comparison-period-nav { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
+.comparison-period-nav select { max-width: 100%; }
+.comparison-month-nav select { text-transform: capitalize; }
+.comparison-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
+.comparison-card { min-width: 0; padding: 1rem; background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; }
+.comparison-card h3 { display: flex; flex-direction: column; gap: .2rem; margin: 0 0 .8rem; color: var(--text); font-weight: 600; }
+.comparison-card h3 span { font-size: .72rem; font-weight: 400; text-transform: capitalize; color: var(--muted); }
+.comparison-value { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .25rem .6rem; margin: .4rem 0; font-size: .8rem; }
+.comparison-value span { overflow-wrap: anywhere; }
+.comparison-value strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.comparison-value-0 { color: #ffa726; }
+.comparison-value-1 { color: #b388ff; }
+.comparison-card p { border-top: 1px solid var(--border); margin-top: .8rem; padding-top: .7rem; font-size: .8rem; line-height: 1.6; overflow-wrap: anywhere; }
+.comparison-chart-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; margin: 1.4rem 0 .8rem; }
+.comparison-chart-head h3 { margin: 0; color: var(--text); }
+.comparison-legend { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; margin-bottom: .5rem; font-size: .85rem; }
+.comparison-legend span { display: inline-flex; align-items: center; gap: .5rem; overflow-wrap: anywhere; min-width: 0; }
+.comparison-legend i { width: 22px; flex-shrink: 0; border-top: 3px solid; }
+.comparison-legend-0 { color: #ffa726; }
+.comparison-legend-1 { color: #b388ff; }
+.comparison-options { margin-bottom: .8rem; }
+.comparison-record-legend, .comparison-rain-legend { color: var(--muted); font-size: .75rem; }
+.comparison-record-legend i { border-top-style: dashed; }
+.comparison-chart .comparison-rain-axis { fill: var(--rain); }
+.comparison-chart .comparison-record-year { font-size: 9px; }
+.comparison-chart { width: 100%; min-width: 0; }
+.comparison-chart svg { display: block; width: 100%; height: auto; }
+.comparison-chart text { fill: var(--muted); font: 11px "Segoe UI", system-ui, sans-serif; }
+.comparison-chart text.selected { fill: var(--text); font-weight: 700; }
+.comparison-chart rect[data-month] { cursor: pointer; }
+.comparison-chart rect[data-month]:hover { fill: rgba(255, 255, 255, .04); }
+.comparison-table-wrap { margin-top: 1rem; font-size: .8rem; }
+.comparison-table-wrap summary { color: var(--accent-2); cursor: pointer; padding: .4rem 0; }
+.comparison-table-scroll { overflow-x: auto; }
+#comparison-table { width: 100%; border-collapse: collapse; margin-top: .6rem; font-variant-numeric: tabular-nums; }
+#comparison-table caption { text-align: left; padding-bottom: .6rem; color: var(--muted); }
+#comparison-table th, #comparison-table td { padding: .5rem; border-bottom: 1px solid var(--border); text-align: right; }
+#comparison-table th:first-child { text-align: left; text-transform: capitalize; }
+#comparison-table .selected { background: var(--panel-2); }
+.comparison-source { border-top: 1px solid var(--border); margin-top: 1rem; padding-top: .8rem; }
+#city-comparison :is(button, select, input, summary):focus-visible,
+.climo-mode-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
+  .comparison-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   main { padding: 0 1rem 2rem; }
   .today-top { grid-template-columns: 1fr; }
   .day-row { grid-template-columns: 14px 80px 34px 1fr 84px 66px 66px; }
@@ -596,6 +795,11 @@ main {
   :root { font-size: 15px; }
   main { padding: 0 .5rem 1.5rem; gap: .8rem; }
   .panel { padding: .9rem .8rem; border-radius: 10px; }
+
+  .comparison-cities { grid-template-columns: minmax(0, 1fr); gap: .6rem; }
+  .comparison-versus { display: none; }
+  .comparison-cards { grid-template-columns: minmax(0, 1fr); }
+  .comparison-month-nav { gap: .4rem; }
 
   /* Héro temps réel */
   .obs-hero { gap: 1.2rem; margin-bottom: .9rem; }
@@ -654,5 +858,3 @@ main {
   .day-desc, .day-sun { display: none; }
   .day-rain { text-align: right; }
 }
-
-
